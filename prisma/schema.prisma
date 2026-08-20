@@ -17,43 +17,123 @@ model Shop {
   updatedAt   DateTime @updatedAt
 }
 
-model ProductCustomizerConfig {
-  id                String   @id @default(uuid())
-  shop              String
-  shopifyProductId  String   @unique
-  productTitle      String
-  isEnabled         Boolean  @default(true)
-  allowCustomText   Boolean  @default(true)
-  allowImageUpload  Boolean  @default(true)
-  allowColorPicker  Boolean  @default(true)
-  availableFonts    String   @default("[\"Roboto\", \"Montserrat\", \"Playfair Display\", \"Dancing Script\", \"Pacifico\"]")
-  availableColors   String   @default("[\"#111827\", \"#DC2626\", \"#2563EB\", \"#16A34A\", \"#D97706\", \"#FFFFFF\"]")
-  baseMockupUrl     String?
-  extraPrice        Float    @default(0.0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+model ProductConfig {
+  id               String   @id @default(uuid()) // e.g. cfg_watchstrap_001
+  shop             String   @default("wildandking-demo.myshopify.com")
+  shopifyProductId String   @unique
+  productTitle     String
+  basePrice        Float    @default(0.0)
+  baseMockupUrl    String?
+  isEnabled        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  optionGroups       OptionGroup[]
+  compatibilityRules CompatibilityRule[]
+  priceRules         PriceRule[]
+  designs            Design[]
 
   @@index([shop, shopifyProductId])
 }
 
-model CustomDesign {
+model OptionGroup {
+  id              String        @id @default(uuid())
+  productConfigId String
+  name            String // e.g. "Leather Type", "Buckle", "Lug Width", "Stitch"
+  type            String // LEATHER, BUCKLE, SIZE, STITCH, ENGRAVING, CUSTOM
+  required        Boolean       @default(true)
+  sortOrder       Int           @default(0)
+  productConfig   ProductConfig @relation(fields: [productConfigId], references: [id], onDelete: Cascade)
+  values          OptionValue[]
+
+  @@index([productConfigId])
+}
+
+model OptionValue {
+  id            String      @id @default(uuid())
+  optionGroupId String
+  name          String // e.g. "Black Buttero (Italy)"
+  code          String // e.g. "buttero-black"
+  colorHex      String? // e.g. "#171717"
+  imageUrl      String?
+  extraPrice    Float       @default(0.0)
+  inStock       Boolean     @default(true)
+  sortOrder     Int         @default(0)
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([optionGroupId])
+}
+
+model CompatibilityRule {
+  id                         String        @id @default(uuid())
+  productConfigId            String
+  ifOptionValueId            String
+  thenDisallowOptionValueIds String // JSON array of disallowed value IDs
+  reason                     String?
+  productConfig              ProductConfig @relation(fields: [productConfigId], references: [id], onDelete: Cascade)
+
+  @@index([productConfigId])
+}
+
+model PriceRule {
+  id                       String        @id @default(uuid())
+  productConfigId          String
+  name                     String
+  conditionOptionValueIds  String // JSON array of value IDs that trigger this rule
+  additionalPrice          Float         @default(0.0)
+  productConfig            ProductConfig @relation(fields: [productConfigId], references: [id], onDelete: Cascade)
+
+  @@index([productConfigId])
+}
+
+model Design {
+  id              String         @id @default(uuid()) // dsg_xxxx
+  productConfigId String?
+  shop            String
+  productId       String
+  variantId       String?
+  engravingText   String?
+  engravingFont   String?
+  engravingColor  String?
+  previewUrl      String?
+  totalExtraPrice Float          @default(0.0)
+  rawSelections   String? // JSON of full selections
+  pricingJson     String? // JSON of price breakdown
+  status          String         @default("DRAFT") // DRAFT, ORDERED, IN_PRODUCTION, QC, SHIPPED
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  productConfig   ProductConfig? @relation(fields: [productConfigId], references: [id])
+  selections      DesignSelection[]
+  productionJob   ProductionJob?
+
+  @@index([shop, productId])
+}
+
+model DesignSelection {
+  id         String   @id @default(uuid())
+  designId   String
+  groupName  String
+  valueName  String
+  extraPrice Float    @default(0.0)
+  design     Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@index([designId])
+}
+
+model ProductionJob {
   id                 String   @id @default(uuid())
-  shop               String
-  productId          String
-  variantId          String?
-  customText         String?
-  fontFamily         String?
-  textColor          String?
-  customImageUrl     String?
-  previewImageUrl    String?
-  rawDesignData      String?
-  status             String   @default("DRAFT") // DRAFT, ORDERED, IN_PRODUCTION, COMPLETED
-  shopifyOrderId     String?
-  shopifyOrderNumber String?
+  designId           String   @unique
+  shopifyOrderId     String
+  shopifyOrderNumber String
   customerEmail      String?
+  shippingAddress    String?
+  status             String   @default("NEW") // NEW, IN_PRODUCTION, QC, SHIPPED
+  notes              String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  @@index([shop, productId])
+  design             Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+
   @@index([shopifyOrderId])
 }

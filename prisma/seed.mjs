@@ -3,136 +3,127 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Bắt đầu gieo dữ liệu mẫu (Seeding demo data)...");
+  console.log("🌱 Bắt đầu gieo dữ liệu Customizer Watchstrap & Leather Craft...");
 
-  // 1. Tạo Shop Demo
+  // 1. Shop Demo
   const shop = await prisma.shop.upsert({
-    where: { shop: "wild-and-king-demo.myshopify.com" },
+    where: { shop: "wildandking-demo.myshopify.com" },
     update: {},
     create: {
-      shop: "wild-and-king-demo.myshopify.com",
+      shop: "wildandking-demo.myshopify.com",
       accessToken: "shpat_demo_access_token_wk2026",
       scope: "read_products,write_products,read_orders,write_orders,read_themes,write_themes",
       installed: true,
     },
   });
-  console.log("✅ Đã tạo Shop demo:", shop.shop);
 
-  // 2. Tạo Cấu hình Customizer Mẫu cho các Sản phẩm
-  const products = [
-    {
+  // 2. Product Config: Custom Watch Strap (Dây đồng hồ da thủ công)
+  const config = await prisma.productConfig.upsert({
+    where: { shopifyProductId: "8129384729101" },
+    update: {},
+    create: {
+      id: "cfg_watchstrap_001",
+      shop: "wildandking-demo.myshopify.com",
       shopifyProductId: "8129384729101",
-      productTitle: "Áo Thun Cotton In Slogan & Tên Cá Nhân Hóa",
+      productTitle: "Custom Bespoke Watch Strap (Dây Đồng Hồ Thủ Công)",
+      basePrice: 65.0,
+      baseMockupUrl: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&auto=format&fit=crop&q=80",
       isEnabled: true,
-      allowCustomText: true,
-      allowImageUpload: true,
-      allowColorPicker: true,
-      availableFonts: JSON.stringify(["Roboto", "Montserrat", "Playfair Display", "Dancing Script", "Pacifico"]),
-      availableColors: JSON.stringify(["#111827", "#DC2626", "#2563EB", "#16A34A", "#D97706", "#FFFFFF"]),
-      baseMockupUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80",
-      extraPrice: 3.5,
     },
-    {
-      shopifyProductId: "8129384729102",
-      productTitle: "Bình Giữ Nhiệt Khắc Tên Laser Cao Cấp",
-      isEnabled: true,
-      allowCustomText: true,
-      allowImageUpload: false,
-      allowColorPicker: true,
-      availableFonts: JSON.stringify(["Montserrat", "Playfair Display", "Dancing Script"]),
-      availableColors: JSON.stringify(["#111827", "#FFFFFF", "#D97706"]),
-      baseMockupUrl: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&auto=format&fit=crop&q=80",
-      extraPrice: 2.0,
-    },
-    {
-      shopifyProductId: "8129384729103",
-      productTitle: "Ví Da Nam Khắc Chữ Kỷ Niệm",
-      isEnabled: true,
-      allowCustomText: true,
-      allowImageUpload: false,
-      allowColorPicker: true,
-      availableFonts: JSON.stringify(["Playfair Display", "Dancing Script"]),
-      availableColors: JSON.stringify(["#D97706", "#111827"]),
-      baseMockupUrl: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&auto=format&fit=crop&q=80",
-      extraPrice: 5.0,
-    },
-  ];
+  });
 
-  for (const prod of products) {
-    await prisma.productCustomizerConfig.upsert({
-      where: { shopifyProductId: prod.shopifyProductId },
-      update: prod,
-      create: {
-        ...prod,
-        shop: "wild-and-king-demo.myshopify.com",
+  // 3. Option Groups & Values
+  // Group 1: Leather Type
+  const leatherGroup = await prisma.optionGroup.create({
+    data: {
+      productConfigId: config.id,
+      name: "Chất Liệu Da (Leather)",
+      type: "LEATHER",
+      sortOrder: 1,
+      values: {
+        create: [
+          { name: "Black Buttero (Ý)", code: "buttero-black", colorHex: "#171717", extraPrice: 0.0, inStock: true, sortOrder: 1 },
+          { name: "Classic Tan Buttero", code: "buttero-tan", colorHex: "#B45309", extraPrice: 5.0, inStock: true, sortOrder: 2 },
+          { name: "Burgundy Shell Cordovan", code: "cordovan-burgundy", colorHex: "#831843", extraPrice: 20.0, inStock: true, sortOrder: 3 },
+          { name: "Olive Pueblo Leather", code: "pueblo-olive", colorHex: "#3F6212", extraPrice: 12.0, inStock: true, sortOrder: 4 },
+          { name: "Navy Blue Epsom", code: "epsom-navy", colorHex: "#1E3A8A", extraPrice: 10.0, inStock: true, sortOrder: 5 },
+        ],
       },
-    });
-  }
-  console.log(`✅ Đã tạo cấu hình cho ${products.length} sản phẩm mẫu.`);
+    },
+  });
 
-  // 3. Tạo Đơn hàng Tùy chỉnh Mẫu trong Hàng chờ Sản xuất
-  const sampleDesigns = [
-    {
-      id: "dsg_demo_1088",
-      shop: "wild-and-king-demo.myshopify.com",
+  // Group 2: Buckle Style
+  const buckleGroup = await prisma.optionGroup.create({
+    data: {
+      productConfigId: config.id,
+      name: "Kiểu Khóa (Buckle)",
+      type: "BUCKLE",
+      sortOrder: 2,
+      values: {
+        create: [
+          { name: "Matte Black PVD", code: "matte-black", colorHex: "#262626", extraPrice: 0.0, inStock: true, sortOrder: 1 },
+          { name: "Brushed 316L Silver", code: "brushed-silver", colorHex: "#D1D5DB", extraPrice: 0.0, inStock: true, sortOrder: 2 },
+          { name: "18K Rose Gold Finish", code: "rose-gold", colorHex: "#FBCFE8", extraPrice: 15.0, inStock: true, sortOrder: 3 },
+          { name: "Vintage Brass", code: "vintage-brass", colorHex: "#CA8A04", extraPrice: 8.0, inStock: true, sortOrder: 4 },
+        ],
+      },
+    },
+  });
+
+  // Group 3: Lug Width
+  const widthGroup = await prisma.optionGroup.create({
+    data: {
+      productConfigId: config.id,
+      name: "Kích Thước Bản Dây (Lug Width)",
+      type: "SIZE",
+      sortOrder: 3,
+      values: {
+        create: [
+          { name: "18 mm", code: "18mm", extraPrice: 0.0, inStock: true, sortOrder: 1 },
+          { name: "20 mm", code: "20mm", extraPrice: 0.0, inStock: true, sortOrder: 2 },
+          { name: "22 mm", code: "22mm", extraPrice: 0.0, inStock: true, sortOrder: 3 },
+          { name: "24 mm", code: "24mm", extraPrice: 2.0, inStock: true, sortOrder: 4 },
+        ],
+      },
+    },
+  });
+
+  // 4. Sample Custom Design & Production Job
+  const design = await prisma.design.create({
+    data: {
+      id: "dsg_8rf91",
+      productConfigId: config.id,
+      shop: "wildandking-demo.myshopify.com",
       productId: "8129384729101",
       variantId: "44910293810231",
-      customText: "Wild & King - Est. 2026",
-      fontFamily: "Pacifico",
-      textColor: "#111827",
-      status: "READY_FOR_PRODUCTION",
-      shopifyOrderId: "gid://shopify/Order/59281928301",
-      shopifyOrderNumber: "1088",
-      customerEmail: "khachhang1@gmail.com",
-      rawDesignData: JSON.stringify({ text: "Wild & King - Est. 2026", font: "Pacifico", color: "#111827", fontSize: 28 }),
-    },
-    {
-      id: "dsg_demo_1089",
-      shop: "wild-and-king-demo.myshopify.com",
-      productId: "8129384729102",
-      variantId: "44910293810232",
-      customText: "Phương Nam & Hoàng Lan ❤️ 20.08",
-      fontFamily: "Dancing Script",
-      textColor: "#DC2626",
+      engravingText: "WILD & KING 2026",
+      engravingFont: "Pacifico",
+      engravingColor: "#FFFFFF",
+      totalExtraPrice: 20.0,
       status: "IN_PRODUCTION",
-      shopifyOrderId: "gid://shopify/Order/59281928302",
-      shopifyOrderNumber: "1089",
-      customerEmail: "nam.phuong@company.com",
-      rawDesignData: JSON.stringify({ text: "Phương Nam & Hoàng Lan ❤️ 20.08", font: "Dancing Script", color: "#DC2626", fontSize: 24 }),
+      selections: {
+        create: [
+          { groupName: "Chất Liệu Da", valueName: "Burgundy Shell Cordovan", extraPrice: 20.0 },
+          { groupName: "Kiểu Khóa", valueName: "Brushed 316L Silver", extraPrice: 0.0 },
+          { groupName: "Kích Thước", valueName: "22 mm", extraPrice: 0.0 },
+        ],
+      },
+      productionJob: {
+        create: {
+          shopifyOrderId: "gid://shopify/Order/59281928301",
+          shopifyOrderNumber: "1088",
+          customerEmail: "vip.customer@wildking.vn",
+          shippingAddress: "123 Le Loi, District 1, Ho Chi Minh City",
+          status: "IN_PRODUCTION",
+          notes: "Khách yêu cầu khâu chỉ sáp thủ công viền đôi.",
+        },
+      },
     },
-    {
-      id: "dsg_demo_1090",
-      shop: "wild-and-king-demo.myshopify.com",
-      productId: "8129384729103",
-      variantId: "44910293810233",
-      customText: "CHAMPION 2026",
-      fontFamily: "Montserrat",
-      textColor: "#D97706",
-      status: "COMPLETED",
-      shopifyOrderId: "gid://shopify/Order/59281928303",
-      shopifyOrderNumber: "1090",
-      customerEmail: "contact@wildking.vn",
-      rawDesignData: JSON.stringify({ text: "CHAMPION 2026", font: "Montserrat", color: "#D97706", fontSize: 22 }),
-    },
-  ];
+  });
 
-  for (const dsg of sampleDesigns) {
-    await prisma.customDesign.upsert({
-      where: { id: dsg.id },
-      update: dsg,
-      create: dsg,
-    });
-  }
-  console.log(`✅ Đã tạo ${sampleDesigns.length} đơn hàng thiết kế mẫu trong hàng chờ sản xuất.`);
-
-  console.log("🎉 Seed dữ liệu mẫu hoàn tất!");
+  console.log("✅ Đã gieo dữ liệu thành công! Design ID mẫu:", design.id);
 }
 
 main()
-  .catch((e) => {
-    console.error("❌ Lỗi khi seed dữ liệu:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch((e) => console.error("❌ Seed Error:", e))
+  .finally(() => prisma.$disconnect());

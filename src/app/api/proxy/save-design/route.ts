@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { verifyShopifyProxySignature } from "@/lib/hmac";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -17,9 +19,8 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const shop = url.searchParams.get("shop") || "internal-store.myshopify.com";
+    const shop = url.searchParams.get("shop") || "wildandking-demo.myshopify.com";
 
-    // Verify Shopify HMAC signature
     if (process.env.NODE_ENV === "production") {
       const isValid = verifyShopifyProxySignature(url.searchParams);
       if (!isValid) {
@@ -35,31 +36,27 @@ export async function POST(req: NextRequest) {
       fontFamily,
       textColor,
       customImageUrl,
-      previewImageUrl,
       rawDesignData,
-      customerEmail,
     } = body;
 
     if (!productId) {
       return NextResponse.json({ error: "Missing productId" }, { status: 400 });
     }
 
-    const designId = "dsg_" + crypto.randomUUID();
+    const designId = "dsg_" + crypto.randomUUID().slice(0, 8);
 
-    const savedDesign = await db.customDesign.create({
+    const savedDesign = await db.design.create({
       data: {
         id: designId,
         shop,
         productId: String(productId),
         variantId: variantId ? String(variantId) : null,
-        customText: customText || null,
-        fontFamily: fontFamily || null,
-        textColor: textColor || null,
-        customImageUrl: customImageUrl || null,
-        previewImageUrl: previewImageUrl || null,
-        rawDesignData: typeof rawDesignData === "string" ? rawDesignData : JSON.stringify(rawDesignData || {}),
+        engravingText: customText || null,
+        engravingFont: fontFamily || null,
+        engravingColor: textColor || null,
+        previewUrl: customImageUrl || null,
+        rawSelections: typeof rawDesignData === "string" ? rawDesignData : JSON.stringify(rawDesignData || {}),
         status: "DRAFT",
-        customerEmail: customerEmail || null,
       },
     });
 

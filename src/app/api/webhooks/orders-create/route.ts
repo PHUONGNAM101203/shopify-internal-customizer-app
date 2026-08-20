@@ -2,50 +2,66 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyShopifyWebhook } from "@/lib/hmac";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const hmacHeader = req.headers.get("x-shopify-hmac-sha256");
     const shopHeader = req.headers.get("x-shopify-shop-domain") || "";
 
-    // Verify Shopify HMAC signature
     if (process.env.NODE_ENV === "production") {
       const isValid = verifyShopifyWebhook(rawBody, hmacHeader);
       if (!isValid) {
-        console.error("❌ Invalid Shopify Webhook HMAC Signature");
         return NextResponse.json({ error: "Invalid HMAC" }, { status: 401 });
       }
     }
 
     const order = JSON.parse(rawBody);
-    console.log(`📦 Webhook received: Order #${order.order_number} (ID: ${order.id}) from ${shopHeader}`);
+    console.log(`📦 Order Webhook: Order #${order.order_number} (ID: ${order.id}) from ${shopHeader}`);
 
-    const matchedDesigns: string[] = [];
+    const matchedJobs: string[] = [];
 
     if (order.line_items && Array.isArray(order.line_items)) {
       for (const lineItem of order.line_items) {
-        // Find _custom_design_id in line item properties
-        const designProperty = lineItem.properties?.find(
+        const designProp = lineItem.properties?.find(
           (p: { name: string; value: string }) => p.name === "_custom_design_id"
         );
 
-        if (designProperty && designProperty.value) {
-          const designId = designProperty.value;
-          console.log(`🎯 Linking Order #${order.order_number} to Custom Design: ${designId}`);
+        if (designProp && designProp.value) {
+          const designId = designProp.value;
 
           try {
-            await db.customDesign.update({
+            // Update Design status to ORDERED
+            await db.design.update({
               where: { id: designId },
-              data: {
-                status: "READY_FOR_PRODUCTION",
+              data: { status: "ORDERED" },
+            });
+
+            // Create Production Job
+            const job = await db.productionJob.upsert({
+              where: { designId },
+              update: {
                 shopifyOrderId: String(order.id),
                 shopifyOrderNumber: String(order.order_number),
                 customerEmail: order.email || order.customer?.email || null,
+                shippingAddress: order.shipping_address ? `${order.shipping_address.address1}, ${order.shipping_address.city}` : null,
+                status: "NEW",
+              },
+              create: {
+                designId,
+                shopifyOrderId: String(order.id),
+                shopifyOrderNumber: String(order.order_number),
+                customerEmail: order.email || order.customer?.email || null,
+                shippingAddress: order.shipping_address ? `${order.shipping_address.address1}, ${order.shipping_address.city}` : null,
+                status: "NEW",
+                notes: `Line item: ${lineItem.title}`,
               },
             });
-            matchedDesigns.push(designId);
+
+            matchedJobs.push(job.id);
           } catch (dbErr) {
-            console.warn(`Could not update design ${designId} in DB:`, dbErr);
+            console.warn(`Could not link design ${designId} with production job:`, dbErr);
           }
         }
       }
@@ -53,12 +69,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Processed order #${order.order_number}`,
-      matchedDesignsCount: matchedDesigns.length,
-      matchedDesigns,
+      orderNumber: order.order_number,
+      createdJobsCount: matchedJobs.length,
     });
   } catch (error: any) {
-    console.error("❌ Error processing orders-create webhook:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    console.error("Webhook processing error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

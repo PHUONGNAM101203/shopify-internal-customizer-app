@@ -11,10 +11,10 @@ export default async function AdminDashboardPage() {
   let readyOrders = 0;
 
   try {
-    totalConfigs = await db.productCustomizerConfig.count();
-    totalDesigns = await db.customDesign.count();
-    readyOrders = await db.customDesign.count({
-      where: { status: "READY_FOR_PRODUCTION" },
+    totalConfigs = await db.productConfig.count();
+    totalDesigns = await db.design.count();
+    readyOrders = await db.productionJob.count({
+      where: { status: "NEW" },
     });
   } catch (err) {
     console.warn("DB not yet initialized or empty:", err);

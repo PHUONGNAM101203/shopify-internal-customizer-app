@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const shop = url.searchParams.get("shop") || "internal-store.myshopify.com";
-
-    const configs = await db.productCustomizerConfig.findMany({
-      where: { shop },
+    const configs = await db.productConfig.findMany({
+      include: {
+        optionGroups: {
+          include: {
+            values: {
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        compatibilityRules: true,
+        priceRules: true,
+      },
       orderBy: { updatedAt: "desc" },
     });
 
-    return NextResponse.json({
-      configs: configs.map((c) => ({
-        ...c,
-        availableFonts: JSON.parse(c.availableFonts || "[]"),
-        availableColors: JSON.parse(c.availableColors || "[]"),
-      })),
-    });
+    return NextResponse.json({ configs });
   } catch (error: any) {
     console.error("Error fetching configs:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -28,57 +32,36 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      shop = "internal-store.myshopify.com",
       shopifyProductId,
       productTitle,
-      isEnabled = true,
-      allowCustomText = true,
-      allowImageUpload = true,
-      allowColorPicker = true,
-      availableFonts = ["Roboto", "Montserrat", "Playfair Display"],
-      availableColors = ["#111827", "#DC2626", "#2563EB", "#16A34A"],
+      basePrice = 65.0,
       baseMockupUrl,
-      extraPrice = 0,
+      isEnabled = true,
+      groups = [],
     } = body;
 
     if (!shopifyProductId || !productTitle) {
       return NextResponse.json({ error: "Product ID and Title are required" }, { status: 400 });
     }
 
-    const savedConfig = await db.productCustomizerConfig.upsert({
+    const config = await db.productConfig.upsert({
       where: { shopifyProductId: String(shopifyProductId) },
       update: {
-        shop,
         productTitle,
-        isEnabled,
-        allowCustomText,
-        allowImageUpload,
-        allowColorPicker,
-        availableFonts: JSON.stringify(availableFonts),
-        availableColors: JSON.stringify(availableColors),
+        basePrice: parseFloat(String(basePrice)) || 0,
         baseMockupUrl,
-        extraPrice: parseFloat(String(extraPrice)) || 0,
+        isEnabled,
       },
       create: {
-        shop,
         shopifyProductId: String(shopifyProductId),
         productTitle,
-        isEnabled,
-        allowCustomText,
-        allowImageUpload,
-        allowColorPicker,
-        availableFonts: JSON.stringify(availableFonts),
-        availableColors: JSON.stringify(availableColors),
+        basePrice: parseFloat(String(basePrice)) || 0,
         baseMockupUrl,
-        extraPrice: parseFloat(String(extraPrice)) || 0,
+        isEnabled,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      config: savedConfig,
-      message: "Configuration saved successfully",
-    });
+    return NextResponse.json({ success: true, config });
   } catch (error: any) {
     console.error("Error saving product config:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
