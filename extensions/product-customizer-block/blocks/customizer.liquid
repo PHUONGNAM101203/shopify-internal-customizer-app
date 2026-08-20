@@ -1,0 +1,48 @@
+{% schema %}
+{
+  "name": "Custom Product Designer",
+  "target": "section",
+  "stylesheet": "customizer.css",
+  "javascript": "customizer-bundle.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "block_title",
+      "label": "Customizer Title",
+      "default": "🎨 Tùy Chỉnh Thiết Kế Sản Phẩm"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_text",
+      "label": "Nút Thêm Giỏ Hàng",
+      "default": "Thêm vào giỏ hàng với thiết kế này"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Màu chủ đạo",
+      "default": "#008060"
+    }
+  ]
+}
+{% endschema %}
+
+<div 
+  id="product-customizer-root"
+  class="shopify-product-customizer-wrapper"
+  data-product-id="{{ product.id }}"
+  data-product-title="{{ product.title | escape }}"
+  data-selected-variant-id="{{ product.selected_or_first_available_variant.id }}"
+  data-product-handle="{{ product.handle }}"
+  data-shop-domain="{{ shop.permanent_domain }}"
+  data-block-title="{{ block.settings.block_title | escape }}"
+  data-btn-text="{{ block.settings.add_to_cart_text | escape }}"
+  data-primary-color="{{ block.settings.primary_color }}"
+  data-app-proxy-url="/apps/customizer"
+>
+  <!-- Loading Placeholder trước khi React mount -->
+  <div class="customizer-loading-state">
+    <div class="customizer-spinner"></div>
+    <span>Đang tải bảng tùy chỉnh sản phẩm...</span>
+  </div>
+</div>

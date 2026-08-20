@@ -1,0 +1,6 @@
+# Theme Check configuration for Theme App Extensions with React Bundles
+AssetSizeAppBlockJavaScript:
+  enabled: false
+
+AssetSizeJavaScript:
+  threshold_in_bytes: 10000000

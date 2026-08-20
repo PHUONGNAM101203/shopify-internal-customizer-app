@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Shop {
+  id          String   @id @default(uuid())
+  shop        String   @unique
+  accessToken String
+  scope       String?
+  installed   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductCustomizerConfig {
+  id                String   @id @default(uuid())
+  shop              String
+  shopifyProductId  String   @unique
+  productTitle      String
+  isEnabled         Boolean  @default(true)
+  allowCustomText   Boolean  @default(true)
+  allowImageUpload  Boolean  @default(true)
+  allowColorPicker  Boolean  @default(true)
+  availableFonts    String   @default("[\"Roboto\", \"Montserrat\", \"Playfair Display\", \"Dancing Script\", \"Pacifico\"]")
+  availableColors   String   @default("[\"#111827\", \"#DC2626\", \"#2563EB\", \"#16A34A\", \"#D97706\", \"#FFFFFF\"]")
+  baseMockupUrl     String?
+  extraPrice        Float    @default(0.0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([shop, shopifyProductId])
+}
+
+model CustomDesign {
+  id                 String   @id @default(uuid())
+  shop               String
+  productId          String
+  variantId          String?
+  customText         String?
+  fontFamily         String?
+  textColor          String?
+  customImageUrl     String?
+  previewImageUrl    String?
+  rawDesignData      String?
+  status             String   @default("DRAFT") // DRAFT, ORDERED, IN_PRODUCTION, COMPLETED
+  shopifyOrderId     String?
+  shopifyOrderNumber String?
+  customerEmail      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([shop, productId])
+  @@index([shopifyOrderId])
+}
