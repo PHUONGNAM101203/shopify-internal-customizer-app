@@ -2,7 +2,7 @@
 
 name = "Wild & King Customizer"
 handle = "wk-internal-customizer"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "http://localhost:3000"
 embedded = true
 client_id = "21102b2e2138173c5ab87e5ad38ef1e4"
 
@@ -15,7 +15,7 @@ automatically_update_urls_on_dev = true
 scopes = "read_products,write_products,read_orders,write_orders,read_themes,write_themes"
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "http://localhost:3000/api/auth/callback" ]
 
 [webhooks]
 api_version = "2026-10"
@@ -29,6 +29,6 @@ api_version = "2026-10"
   topics = [ "app/uninstalled" ]
 
 [app_proxy]
-url = "https://your-tunnel-or-domain.ngrok-free.app/api/proxy"
+url = "http://localhost:3000/api/proxy"
 subpath = "customizer"
 prefix = "apps"
