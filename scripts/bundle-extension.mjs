@@ -22,6 +22,15 @@ try {
     define: {
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "production"),
     },
+    // CustomizerApp is shared with the Next.js storefront-preview page, which needs
+    // real React types/runtime — so this esbuild-only bundle aliases react/react-dom
+    // to preact/compat (same API, ~8KB vs ~130KB) instead of editing the source imports.
+    alias: {
+      "react": "preact/compat",
+      "react-dom/client": "preact/compat/client",
+      "react-dom": "preact/compat",
+      "react/jsx-runtime": "preact/jsx-runtime",
+    },
     loader: {
       ".png": "dataurl",
       ".svg": "text",
