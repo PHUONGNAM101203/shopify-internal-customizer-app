@@ -1,9 +1,8 @@
-type = "frontend"
-roles = ["frontend", "backend"]
+type = "backend"
+roles = ["backend", "frontend"]
 
 [commands]
-dev = "npm run dev"
-build = "npm run build"
+dev = "npm --prefix .. run dev:app"
+build = "npm --prefix .. run build"
 
-[port]
 port = 3000

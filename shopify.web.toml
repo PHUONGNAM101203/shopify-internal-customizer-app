@@ -1,9 +1,0 @@
-# Shopify CLI Web Frontend configuration for Next.js App
-type = "frontend"
-
-[commands]
-dev = "npm run dev"
-build = "npm run build"
-
-[port]
-port = 3000
