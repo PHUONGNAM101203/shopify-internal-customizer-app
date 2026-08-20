@@ -1,39 +1,123 @@
-# Dependencies
-/node_modules
-/.pnp
+# ==============================================================================
+# 🚀 SHOPIFY APP & NEXT.JS PRODUCTION GITIGNORE
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DEPENDENCIES & PACKAGE MANAGERS
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp
 .pnp.js
+.pnpm-store/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-# Testing
-/coverage
-
-# Next.js
-/.next/
-/out/
-
-# Production
-/build
-
-# Misc
-.DS_Store
-*.pem
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local Env Files
+# ------------------------------------------------------------------------------
+# 2. ENVIRONMENT VARIABLES & SECRETS (QUAN TRỌNG: Không commit key lên GitHub)
+# ------------------------------------------------------------------------------
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env*.local
+*.pem
+*.key
+*.cert
+*.crt
 
-# Vercel
-.vercel
+# Cho phép commit file mẫu (template)
+!.env.example
 
-# TypeScript
+# ------------------------------------------------------------------------------
+# 3. NEXT.JS & BUILD ARTIFACTS
+# ------------------------------------------------------------------------------
+.next/
+out/
+build/
+dist/
+.swc/
 *.tsbuildinfo
 next-env.d.ts
 
-# Shopify CLI state
-.shopify
-prisma/dev.db
-prisma/dev.db-journal
+# ------------------------------------------------------------------------------
+# 4. DATABASE & PRISMA LOCAL FILES
+# ------------------------------------------------------------------------------
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# ------------------------------------------------------------------------------
+# 5. SHOPIFY CLI & EXTENSION TEMPORARY STATES
+# ------------------------------------------------------------------------------
+.shopify/
+.shopify-cli/
+.shopify-build/
+.theme-check.cache/
+extensions/**/assets/*.map
+
+# ------------------------------------------------------------------------------
+# 6. LOGS & DIAGNOSTICS
+# ------------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.npm/
+
+# ------------------------------------------------------------------------------
+# 7. TESTING & CODE COVERAGE
+# ------------------------------------------------------------------------------
+coverage/
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+test-results/
+
+# ------------------------------------------------------------------------------
+# 8. VERCEL & CI/CD CACHES
+# ------------------------------------------------------------------------------
+.vercel/
+.turbo/
+
+# ------------------------------------------------------------------------------
+# 9. OPERATING SYSTEM & IDE / EDITOR FILES
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# IDEs & Code Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
